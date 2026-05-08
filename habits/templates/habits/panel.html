@@ -74,13 +74,14 @@
                         </div>
                         {% else %}
                         <div class="calendar-day aspect-square rounded flex flex-col items-center justify-center border transition-all duration-200 cursor-pointer
-                                    bg-gray-800/30 border-gray-700/30"
+                                    {% if dia.todos_completados %}bg-green-900/30 border-green-700/50{% else %}bg-gray-800/30 border-gray-700/30{% endif %}"
                              title="{{ dia.fecha_str }}"
+                             data-todos="{{ dia.todos_completados|yesno:'true,false' }}"
                              style="animation-delay:{{ forloop.counter0|add:1 }}0ms">
-                            <span class="text-[10px] font-medium leading-none mb-px {% if dia.habitos|algun_hecho %}text-green-300{% else %}text-gray-400{% endif %}">{{ dia.num }}</span>
+                            <span class="text-[10px] font-medium leading-none mb-px {% if dia.todos_completados %}text-green-400{% elif dia.habitos|algun_hecho %}text-green-300{% else %}text-gray-400{% endif %}">{{ dia.num }}</span>
                             <div class="flex gap-[1.5px] items-center">
                                 {% for h in habitos %}
-                                {% if h.frecuencia == "weekly" and h.dia_semana is not None and dia.weekday != h.dia_semana %}
+                                {% if h.frecuencia == "weekly" and h.dias_semana and not h.dias_semana|es_dia_activo:dia.weekday %}
                                 <span class="calendar-dot w-[3.5px] h-[3.5px] rounded-full inline-block opacity-20"
                                       style="background-color: {% if dia.habitos|obtener:h.id %}{{ h.color }}{% else %}#4b5563{% endif %};"></span>
                                 {% elif dia.habitos|obtener:h.id %}
@@ -120,25 +121,31 @@
                 <div id="card-{{ h.id }}" class="bg-gray-900/70 border border-gray-800 rounded-xl p-3 hover:border-gray-700 transition-colors">
                     <div class="flex items-center justify-between mb-2">
                         <div class="flex items-center gap-2 min-w-0">
-                            {% if hoy_es_dia_habito|obtener:h.id %}
-                            <button type="button" onclick="toggleHabit({{ h.id }}, '{{ today_str }}')"
-                                    class="w-5 h-5 rounded border-2 flex items-center justify-center shrink-0 cursor-pointer transition-all duration-150
-                                    {% if checked_hoy|obtener:h.id %}
-                                    bg-green-500 border-green-500
+                            <button type="button" onclick="toggleHabit({{ h.id }}, '{{ today_str }}', this)"
+                                    class="w-5 h-5 rounded border-2 flex items-center justify-center shrink-0 transition-all duration-150
+                                    {% if h.checked_hoy %}
+                                    bg-green-500 border-green-500 cursor-default
+                                    {% elif h.es_dia_valido %}
+                                    border-gray-600 hover:border-primary-400 cursor-pointer
                                     {% else %}
-                                    border-gray-600 hover:border-primary-400
+                                    border-yellow-700/50 hover:border-yellow-600 cursor-pointer
                                     {% endif %}"
-                                    id="check-{{ h.id }}">
+                                    id="check-{{ h.id }}"
+                                    data-es-dia-valido="{{ h.es_dia_valido|yesno:'true,false' }}"
+                                    data-proximo="{{ proximo_dia_activo|obtener:h.id|default:'' }}"
+                                    data-dias="{% if h.frecuencia == "weekly" and h.dias_semana %}{{ h.dias_semana|dias_labels:lang }}{% endif %}">
                                 <svg class="w-3 h-3 text-white pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"
-                                     style="display:{% if checked_hoy|obtener:h.id %}block{% else %}none{% endif %};">
+                                     style="display:{% if h.checked_hoy %}block{% else %}none{% endif %}";>
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
                                 </svg>
                             </button>
-                            {% else %}
-                            <div class="w-5 h-5 rounded border-2 border-gray-700 flex items-center justify-center shrink-0 opacity-40 cursor-not-allowed"
-                                 title="{% if h.dia_semana == 0 %}{{ 'Lunes'|traducir:lang }}{% elif h.dia_semana == 1 %}{{ 'Martes'|traducir:lang }}{% elif h.dia_semana == 2 %}{{ 'Miércoles'|traducir:lang }}{% elif h.dia_semana == 3 %}{{ 'Jueves'|traducir:lang }}{% elif h.dia_semana == 4 %}{{ 'Viernes'|traducir:lang }}{% elif h.dia_semana == 5 %}{{ 'Sábado'|traducir:lang }}{% elif h.dia_semana == 6 %}{{ 'Domingo'|traducir:lang }}{% endif %}">
+                            <div id="confirm-{{ h.id }}" class="confirm-tooltip hidden fixed z-50 bg-gray-900 border border-gray-700 rounded-xl shadow-2xl p-3 w-64 text-xs" style="pointer-events:auto;">
+                                <p class="text-gray-300 mb-2 leading-relaxed" id="confirm-msg-{{ h.id }}"></p>
+                                <div class="flex gap-2 justify-end">
+                                    <button type="button" onclick="cerrarConfirmacion({{ h.id }})" class="px-3 py-1.5 bg-gray-800 hover:bg-gray-700 text-gray-300 rounded-lg transition-colors text-[11px]">{{ "Cancelar"|traducir:lang }}</button>
+                                    <button type="button" onclick="ejecutarToggle({{ h.id }}, '{{ today_str }}')" class="px-3 py-1.5 bg-primary-600 hover:bg-primary-500 text-white rounded-lg transition-colors text-[11px] font-medium">{{ "Sí, marcar"|traducir:lang }}</button>
+                                </div>
                             </div>
-                            {% endif %}
                             <span class="font-medium text-xs truncate">{{ h.nombre }}</span>
                         </div>
                         <div class="flex items-center gap-1 shrink-0">
@@ -154,16 +161,14 @@
                         <span>{{ h.total_completados }} {{ "totales"|traducir:lang }}</span>
                         <span>{{ h.tasa_30d }}% {{ "tasa"|traducir:lang }}</span>
                         <span>{{ "Racha"|traducir:lang }}: <span id="racha-{{ h.id }}">{{ h.racha_actual }}</span></span>
-                        {% if h.frecuencia == "weekly" and h.dia_semana is not None %}
-                        <span class="text-primary-400 font-medium">
-                            {% if h.dia_semana == 0 %}{{ 'Lunes'|traducir:lang }}{% elif h.dia_semana == 1 %}{{ 'Martes'|traducir:lang }}{% elif h.dia_semana == 2 %}{{ 'Miércoles'|traducir:lang }}{% elif h.dia_semana == 3 %}{{ 'Jueves'|traducir:lang }}{% elif h.dia_semana == 4 %}{{ 'Viernes'|traducir:lang }}{% elif h.dia_semana == 5 %}{{ 'Sábado'|traducir:lang }}{% elif h.dia_semana == 6 %}{{ 'Domingo'|traducir:lang }}{% endif %}
-                        </span>
+                        {% if h.frecuencia == "weekly" and h.dias_semana %}
+                        <span class="text-primary-400 font-medium text-[10px]">{{ h.dias_semana|dias_labels:lang }}</span>
                         {% endif %}
                     </div>
                     <div class="flex gap-px overflow-x-auto">
                         {% for dia in calendario_dias %}
                         <div class="dot w-1.5 h-1.5 rounded-sm shrink-0
-                            {% if h.frecuencia == "weekly" and h.dia_semana is not None and dia.weekday != h.dia_semana %}
+                            {% if h.frecuencia == "weekly" and h.dias_semana and not h.dias_semana|es_dia_activo:dia.weekday %}
                                 {% if dia.habitos|obtener:h.id %}bg-green-500/20{% else %}bg-gray-800/30{% endif %}
                             {% elif dia.habitos|obtener:h.id %}bg-green-500/60{% else %}bg-gray-800{% endif %}"
                              title="{{ dia.fecha_str }}"
@@ -218,6 +223,20 @@
         animation: fadeIn 0.25s ease forwards;
         opacity: 0;
     }
+    @keyframes dayComplete {
+        0% { transform: scale(1); }
+        50% { transform: scale(1.05); }
+        100% { transform: scale(1); }
+    }
+    .calendar-day.bg-green-900\/30 {
+        animation: dayComplete 0.3s ease;
+    }
+    .confirm-tooltip {
+        animation: fadeIn 0.15s ease;
+    }
+    .confirm-tooltip.hidden {
+        display: none;
+    }
     @keyframes statFadeIn {
         from { opacity: 0; transform: translateY(8px); }
         to { opacity: 1; transform: translateY(0); }
@@ -239,7 +258,42 @@
 
 <script>
     {% if habitos %}
-    function toggleHabit(habitId, date) {
+    function toggleHabit(habitId, date, btn) {
+        if (btn.dataset.esDiaValido === 'false') {
+            mostrarConfirmacion(habitId, btn);
+            return;
+        }
+        ejecutarToggle(habitId, date);
+    }
+
+    function mostrarConfirmacion(habitId, btn) {
+        var tooltip = document.getElementById('confirm-' + habitId);
+        var msg = document.getElementById('confirm-msg-' + habitId);
+        var prox = btn.dataset.proximo;
+        var dias = btn.dataset.dias;
+        msg.textContent = '{{ "Este hábito está configurado para"|traducir:lang }} ' + (dias || '...') + '. ' + '{{ "¿Marcarlo de todas formas?"|traducir:lang }}';
+        if (prox) {
+            msg.textContent += ' {{ "Próximo día activo:"|traducir:lang }} ' + prox;
+        }
+        var rect = btn.getBoundingClientRect();
+        tooltip.style.top = (rect.bottom + 8) + 'px';
+        tooltip.style.left = Math.max(8, Math.min(rect.left + rect.width / 2 - 128, window.innerWidth - 264)) + 'px';
+        tooltip.classList.remove('hidden');
+        var cerrar = function(e) {
+            if (!tooltip.contains(e.target) && e.target !== btn) {
+                tooltip.classList.add('hidden');
+                document.removeEventListener('click', cerrar);
+            }
+        };
+        setTimeout(function() { document.addEventListener('click', cerrar); }, 10);
+    }
+
+    function cerrarConfirmacion(habitId) {
+        document.getElementById('confirm-' + habitId).classList.add('hidden');
+    }
+
+    function ejecutarToggle(habitId, date) {
+        cerrarConfirmacion(habitId);
         const formData = new FormData();
         formData.append('habito_id', habitId);
         formData.append('fecha', date);
@@ -256,7 +310,7 @@
             const isChecked = data.status === 'checked';
             if (isChecked) {
                 btn.classList.add('bg-green-500', 'border-green-500');
-                btn.classList.remove('border-gray-600', 'hover:border-primary-400');
+                btn.classList.remove('border-gray-600', 'hover:border-primary-400', 'border-yellow-700/50', 'hover:border-yellow-600');
                 if (svg) svg.style.display = 'block';
             } else {
                 btn.classList.remove('bg-green-500', 'border-green-500');
@@ -340,12 +394,29 @@
 
     function actualizarDayNumColor(habitId, date, isChecked) {
         const cell = document.querySelector('.calendar-day[title="' + date + '"]');
-        if (cell) {
-            const daySpan = cell.querySelector('span:first-child');
-            if (daySpan) {
-                const anyChecked = cell.querySelector('.calendar-dot[data-checked="1"]');
-                daySpan.className = 'text-[10px] font-medium leading-none mb-px ' + (anyChecked ? 'text-green-300' : 'text-gray-400');
-            }
+        if (!cell) return;
+        const daySpan = cell.querySelector('span:first-child');
+        if (!daySpan) return;
+
+        const allDots = cell.querySelectorAll('.calendar-dot:not(.opacity-20)');
+        const checkedDots = cell.querySelectorAll('.calendar-dot[data-checked="1"]:not(.opacity-20)');
+        const allChecked = allDots.length > 0 && allDots.length === checkedDots.length;
+
+        if (allChecked) {
+            daySpan.className = 'text-[10px] font-medium leading-none mb-px text-green-400';
+            cell.classList.add('bg-green-900/30', 'border-green-700/50');
+            cell.classList.remove('bg-gray-800/30', 'border-gray-700/30');
+            cell.dataset.todos = 'true';
+        } else if (checkedDots.length > 0) {
+            daySpan.className = 'text-[10px] font-medium leading-none mb-px text-green-300';
+            cell.classList.remove('bg-green-900/30', 'border-green-700/50');
+            cell.classList.add('bg-gray-800/30', 'border-gray-700/30');
+            cell.dataset.todos = 'false';
+        } else {
+            daySpan.className = 'text-[10px] font-medium leading-none mb-px text-gray-400';
+            cell.classList.remove('bg-green-900/30', 'border-green-700/50');
+            cell.classList.add('bg-gray-800/30', 'border-gray-700/30');
+            cell.dataset.todos = 'false';
         }
     }
 

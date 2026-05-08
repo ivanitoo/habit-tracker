@@ -78,8 +78,16 @@ def panel(request):
             "weekday": d.weekday(),
             "habitos": {},
         }
+        habitos_activos = 0
+        completados = 0
         for h in habitos:
-            dia_info["habitos"][h.id] = str(d) in heatmap_data[h.id]["registros"]
+            completado = str(d) in heatmap_data[h.id]["registros"]
+            dia_info["habitos"][h.id] = completado
+            if h.frecuencia == "daily" or (h.dias_semana and d.weekday() in [int(x) for x in h.dias_semana.split(",") if x]):
+                habitos_activos += 1
+                if completado:
+                    completados += 1
+        dia_info["todos_completados"] = habitos_activos > 0 and completados == habitos_activos
         calendario_dias.append(dia_info)
 
     meses_disponibles = []
@@ -93,16 +101,18 @@ def panel(request):
         })
 
     today_str = str(hoy)
-    checked_hoy = {}
     total_mes = {}
     completados_mes = {}
-    hoy_es_dia_habito = {}
+    proximo_dia_activo = {}
     for h in habitos:
-        checked_hoy[h.id] = today_str in heatmap_data[h.id]["registros"]
-        if h.frecuencia == "weekly" and h.dia_semana is not None:
-            hoy_es_dia_habito[h.id] = hoy.weekday() == h.dia_semana
+        h.checked_hoy = today_str in heatmap_data[h.id]["registros"]
+        if h.frecuencia == "weekly" and h.dias_semana:
+            h.es_dia_valido = h.es_dia_activo(hoy.weekday())
+            prox = h.proximo_dia_activo(hoy)
+            proximo_dia_activo[h.id] = prox.strftime("%d/%m/%Y") if prox else None
         else:
-            hoy_es_dia_habito[h.id] = True
+            h.es_dia_valido = True
+            proximo_dia_activo[h.id] = None
         completados = sum(
             1 for d in calendario_dias
             if d["habitos"].get(h.id)
@@ -118,8 +128,7 @@ def panel(request):
         "dias_semana": DIAS_SEMANA,
         "hoy": hoy,
         "today_str": today_str,
-        "checked_hoy": checked_hoy,
-        "hoy_es_dia_habito": hoy_es_dia_habito,
+        "proximo_dia_activo": proximo_dia_activo,
         "primer_habito_id": habitos.first().id if habitos else None,
         "selected_month": selected_month,
         "selected_year": selected_year,

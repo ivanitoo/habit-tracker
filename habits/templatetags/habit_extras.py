@@ -33,6 +33,23 @@ EN_MESES = [
 ]
 
 @register.filter
+def es_dia_activo(dias_semana, weekday):
+    if not dias_semana:
+        return True
+    return str(weekday) in dias_semana.split(",")
+
+
+@register.filter
+def dias_labels(dias_semana, idioma):
+    if not dias_semana:
+        return ""
+    nums = [int(d) for d in dias_semana.split(",") if d]
+    if idioma == "es":
+        return ", ".join(DIAS_SEMANA[n] for n in nums)
+    return ", ".join(EN_DIAS[n] for n in nums)
+
+
+@register.filter
 def formatear_fecha(fecha, idioma):
     if idioma == "es":
         dia_semana = DIAS_SEMANA[fecha.weekday()]

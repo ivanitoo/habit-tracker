@@ -36,8 +36,8 @@ class Habito(models.Model):
     frecuencia = models.CharField(
         max_length=10, choices=FRECUENCIAS, default=DIARIO, verbose_name="Frecuencia"
     )
-    dia_semana = models.IntegerField(
-        choices=DIAS_SEMANA_CHOICES, null=True, blank=True, verbose_name="Día de la semana"
+    dias_semana = models.CharField(
+        max_length=20, blank=True, default="", verbose_name="Días de la semana"
     )
     color = models.CharField(max_length=7, default="#6366f1", verbose_name="Color")
     creado = models.DateTimeField(auto_now_add=True)
@@ -50,8 +50,28 @@ class Habito(models.Model):
     def __str__(self):
         return self.nombre
 
+    def get_dias_semana_list(self):
+        if not self.dias_semana:
+            return []
+        return [int(d) for d in self.dias_semana.split(",") if d]
+
+    def es_dia_activo(self, dia):
+        return dia in self.get_dias_semana_list()
+
+    def proximo_dia_activo(self, desde=None):
+        dias = self.get_dias_semana_list()
+        if not dias:
+            return None
+        if desde is None:
+            desde = timezone.localdate()
+        for i in range(8):
+            d = desde + timezone.timedelta(days=i)
+            if d.weekday() in dias:
+                return d
+        return None
+
     def racha_actual(self):
-        if self.frecuencia == self.SEMANAL and self.dia_semana is not None:
+        if self.frecuencia == self.SEMANAL and self.dias_semana:
             return self._racha_semanal()
         return self._racha_diaria()
 
@@ -85,19 +105,21 @@ class Habito(models.Model):
         if not registros:
             return 0
 
+        dias_activos = self.get_dias_semana_list()
+        if not dias_activos:
+            return 0
+
         hoy = timezone.localdate()
-        diff = (hoy.weekday() - self.dia_semana) % 7
-        ultimo_dia_objetivo = hoy - timezone.timedelta(days=diff)
-
-        if ultimo_dia_objetivo > hoy:
-            ultimo_dia_objetivo -= timezone.timedelta(days=7)
-
+        dia = hoy
         racha = 0
-        dia = ultimo_dia_objetivo
 
-        while dia in registros:
-            racha += 1
-            dia -= timezone.timedelta(days=7)
+        for _ in range(365):
+            if dia.weekday() in dias_activos:
+                if dia in registros:
+                    racha += 1
+                else:
+                    break
+            dia -= timezone.timedelta(days=1)
         return racha
 
     def total_completados(self):
