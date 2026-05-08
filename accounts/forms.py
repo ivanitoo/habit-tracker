@@ -25,7 +25,7 @@ class FormularioRegistro(UserCreationForm):
         self.fields["password1"].label = "Contraseña"
         self.fields["password2"].label = "Confirmar contraseña"
         self.fields["password1"].help_text = (
-            "Mínimo 8 caracteres. No puede ser solo números."
+            "Mínimo 8 caracteres."
         )
         self.fields["password2"].help_text = (
             "Repite la contraseña para confirmar."
