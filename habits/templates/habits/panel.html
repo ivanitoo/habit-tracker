@@ -23,7 +23,7 @@
         </div>
         <div class="bg-gray-900/70 border border-gray-800 rounded-lg p-3">
             <p class="text-[10px] text-gray-400">{{ "Hechos hoy"|traducir:lang }}</p>
-            <p class="text-lg font-bold mt-0.5 text-green-400">{{ stats.hechos_hoy }}</p>
+            <p id="hechos-hoy" class="text-lg font-bold mt-0.5 text-green-400">{{ stats.hechos_hoy }}</p>
         </div>
         <div class="bg-gray-900/70 border border-gray-800 rounded-lg p-3">
             <p class="text-[10px] text-gray-400">{{ "Mejor racha"|traducir:lang }}</p>
@@ -51,28 +51,50 @@
                         <span class="text-[11px] text-gray-500">{{ selected_year }}</span>
                     </form>
                 </div>
-                <div class="grid grid-cols-7 gap-0.5">
+                <div class="grid grid-cols-7 gap-px">
                     {% for dia in dias_semana %}
                         <div class="text-center text-[9px] text-gray-500 font-medium pb-1">{{ dia }}</div>
                     {% endfor %}
                     {% for dia in calendario_dias %}
                         {% if dia.fecha > hoy %}
-                        <div class="aspect-square rounded flex items-center justify-center text-[10px] font-medium text-gray-700">
+                        <div class="aspect-square rounded flex flex-col items-center justify-center text-[10px] font-medium text-gray-700">
                             {{ dia.num }}
                         </div>
                         {% else %}
-                        <div class="calendar-day aspect-square rounded flex items-center justify-center text-[10px] font-medium cursor-pointer border transition-all duration-200
-                                    {% if dia.habitos|obtener:primer_habito_id %}bg-green-500/20 border-green-500/50 text-green-300{% else %}bg-gray-800/50 border-gray-700/50 text-gray-400{% endif %}"
-                             onclick="toggleCalendario({{ primer_habito_id }}, '{{ dia.fecha_str }}', this)"
-                             title="{{ dia.fecha_str }}">
-                            {{ dia.num }}
+                        <div class="calendar-day aspect-square rounded flex flex-col items-center justify-center border transition-all duration-200 cursor-pointer
+                                    bg-gray-800/30 border-gray-700/30"
+                             title="{{ dia.fecha_str }}"
+                             style="animation-delay:{{ forloop.counter0|add:1 }}0ms">
+                            <span class="text-[10px] font-medium leading-none mb-px {% if dia.habitos|algun_hecho %}text-green-300{% else %}text-gray-400{% endif %}">{{ dia.num }}</span>
+                            <div class="flex gap-[1.5px] items-center">
+                                {% for h in habitos %}
+                                {% if dia.habitos|obtener:h.id %}
+                                <span class="calendar-dot w-[3.5px] h-[3.5px] rounded-full inline-block cursor-pointer hover:scale-150 transition-transform"
+                                      style="background-color: {{ h.color }};"
+                                      data-habit="{{ h.id }}"
+                                      data-color="{{ h.color }}"
+                                      data-checked="1"
+                                      onclick="event.stopPropagation();toggleCalendario({{ h.id }},'{{ dia.fecha_str }}',this)"></span>
+                                {% else %}
+                                <span class="calendar-dot w-[3.5px] h-[3.5px] rounded-full inline-block cursor-pointer hover:scale-150 transition-transform bg-gray-700"
+                                      data-habit="{{ h.id }}"
+                                      data-color="{{ h.color }}"
+                                      data-checked="0"
+                                      onclick="event.stopPropagation();toggleCalendario({{ h.id }},'{{ dia.fecha_str }}',this)"></span>
+                                {% endif %}
+                                {% endfor %}
+                            </div>
                         </div>
                         {% endif %}
                     {% endfor %}
                 </div>
-                <div class="flex items-center gap-2 mt-2 text-[10px] text-gray-500">
-                    <span class="flex items-center gap-1"><span class="w-2 h-2 rounded bg-green-500/30 border border-green-500/50 inline-block"></span> Hecho</span>
-                    <span class="flex items-center gap-1"><span class="w-2 h-2 rounded bg-gray-800/50 border border-gray-700/50 inline-block"></span> Pendiente</span>
+                <div class="flex items-center gap-3 mt-2 text-[10px] text-gray-500">
+                    {% for h in habitos %}
+                    <span class="flex items-center gap-1">
+                        <span class="w-2 h-2 rounded-full inline-block" style="background-color:{{ h.color }}"></span>
+                        {{ h.nombre }}
+                    </span>
+                    {% endfor %}
                 </div>
             </div>
         </div>
@@ -80,7 +102,7 @@
         <div class="flex-1 min-w-0">
             <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3">
                 {% for h in habitos %}
-                <div class="bg-gray-900/70 border border-gray-800 rounded-xl p-3 hover:border-gray-700 transition-colors">
+                <div id="card-{{ h.id }}" class="bg-gray-900/70 border border-gray-800 rounded-xl p-3 hover:border-gray-700 transition-colors">
                     <div class="flex items-center justify-between mb-2">
                         <div class="flex items-center gap-2 min-w-0">
                             <button type="button" onclick="toggleHabit({{ h.id }}, '{{ today_str }}')"
@@ -110,12 +132,13 @@
                     <div class="flex gap-3 text-[10px] text-gray-500 mb-1.5">
                         <span>{{ h.total_completados }} {{ "totales"|traducir:lang }}</span>
                         <span>{{ h.tasa_30d }}% {{ "tasa"|traducir:lang }}</span>
-                        <span>{{ "Racha"|traducir:lang }}: {{ h.racha_actual }}</span>
+                        <span>{{ "Racha"|traducir:lang }}: <span id="racha-{{ h.id }}">{{ h.racha_actual }}</span></span>
                     </div>
                     <div class="flex gap-px overflow-x-auto">
                         {% for dia in calendario_dias %}
-                        <div class="w-1.5 h-1.5 rounded-sm shrink-0 {% if dia.habitos|obtener:h.id %}bg-green-500/60{% else %}bg-gray-800{% endif %}"
-                             title="{{ dia.fecha_str }}"></div>
+                        <div class="dot w-1.5 h-1.5 rounded-sm shrink-0 {% if dia.habitos|obtener:h.id %}bg-green-500/60{% else %}bg-gray-800{% endif %}"
+                             title="{{ dia.fecha_str }}"
+                             data-habit="{{ h.id }}"></div>
                         {% endfor %}
                     </div>
                 </div>
@@ -125,19 +148,15 @@
     </div>
 
     <div class="bg-gray-900/70 border border-gray-800 rounded-xl p-4">
-        <h2 class="text-sm font-semibold mb-3">{{ "Rendimiento mensual"|traducir:lang }}</h2>
-        <div class="space-y-3">
+        <h2 class="text-sm font-semibold mb-3">{{ "Rachas"|traducir:lang }}</h2>
+        <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
             {% for h in habitos %}
-            <div>
-                <div class="flex items-center justify-between mb-1">
-                    <span class="text-xs text-gray-400">{{ h.nombre }}</span>
-                    <span class="text-[11px] text-gray-500">{{ completados_mes|obtener:h.id }}/{{ total_mes|obtener:h.id }} días</span>
-                </div>
-                <div class="w-full h-2 bg-gray-800 rounded-full overflow-hidden">
-                    {% widthratio completados_mes|obtener:h.id total_mes|obtener:h.id 100 as pct_width %}
-                    <div class="h-full rounded-full transition-all duration-500"
-                         style="width:{% if pct_width > 100 %}100{% else %}{{ pct_width }}{% endif %}%; background-color: {{ h.color }};"></div>
-                </div>
+            <div class="racha-card bg-gray-800/40 border border-gray-700/50 rounded-lg p-3 text-center transition-all duration-200 hover:border-gray-500 hover:scale-[1.02]">
+                <p class="text-xs text-gray-400 mb-1">{% if h.racha_actual > 0 %}{{ h.nombre }}{% else %}<span class="text-gray-600">{{ h.nombre }}</span>{% endif %}</p>
+                <p class="text-xl font-bold {% if h.racha_actual > 0 %}text-orange-400{% else %}text-gray-600{% endif %}">
+                    {% if h.racha_actual > 0 %}🔥 {% endif %}<span id="racha-val-{{ h.id }}">{{ h.racha_actual }}</span>
+                </p>
+                <p class="text-[10px] {% if h.racha_actual > 0 %}text-gray-500{% else %}text-gray-700{% endif %}">{{ "días seguidos"|traducir:lang }}</p>
             </div>
             {% endfor %}
         </div>
@@ -159,8 +178,8 @@
 
 <style>
     .calendar-day:hover {
-        border-color: rgba(255, 255, 255, 0.3) !important;
-        transform: scale(1.1);
+        border-color: rgba(255, 255, 255, 0.25) !important;
+        background-color: rgba(255, 255, 255, 0.03);
     }
     @keyframes fadeIn {
         from { opacity: 0; transform: translateY(3px); }
@@ -170,43 +189,10 @@
         animation: fadeIn 0.25s ease forwards;
         opacity: 0;
     }
-    .calendar-day:nth-child(1) { animation-delay: 0s; }
-    .calendar-day:nth-child(2) { animation-delay: 0.02s; }
-    .calendar-day:nth-child(3) { animation-delay: 0.04s; }
-    .calendar-day:nth-child(4) { animation-delay: 0.06s; }
-    .calendar-day:nth-child(5) { animation-delay: 0.08s; }
-    .calendar-day:nth-child(6) { animation-delay: 0.1s; }
-    .calendar-day:nth-child(7) { animation-delay: 0.12s; }
-    .calendar-day:nth-child(8) { animation-delay: 0.14s; }
-    .calendar-day:nth-child(9) { animation-delay: 0.16s; }
-    .calendar-day:nth-child(10) { animation-delay: 0.18s; }
-    .calendar-day:nth-child(11) { animation-delay: 0.2s; }
-    .calendar-day:nth-child(12) { animation-delay: 0.22s; }
-    .calendar-day:nth-child(13) { animation-delay: 0.24s; }
-    .calendar-day:nth-child(14) { animation-delay: 0.26s; }
-    .calendar-day:nth-child(15) { animation-delay: 0.28s; }
-    .calendar-day:nth-child(16) { animation-delay: 0.3s; }
-    .calendar-day:nth-child(17) { animation-delay: 0.32s; }
-    .calendar-day:nth-child(18) { animation-delay: 0.34s; }
-    .calendar-day:nth-child(19) { animation-delay: 0.36s; }
-    .calendar-day:nth-child(20) { animation-delay: 0.38s; }
-    .calendar-day:nth-child(21) { animation-delay: 0.4s; }
-    .calendar-day:nth-child(22) { animation-delay: 0.42s; }
-    .calendar-day:nth-child(23) { animation-delay: 0.44s; }
-    .calendar-day:nth-child(24) { animation-delay: 0.46s; }
-    .calendar-day:nth-child(25) { animation-delay: 0.48s; }
-    .calendar-day:nth-child(26) { animation-delay: 0.5s; }
-    .calendar-day:nth-child(27) { animation-delay: 0.52s; }
-    .calendar-day:nth-child(28) { animation-delay: 0.54s; }
-    .calendar-day:nth-child(29) { animation-delay: 0.56s; }
-    .calendar-day:nth-child(30) { animation-delay: 0.58s; }
-    .calendar-day:nth-child(31) { animation-delay: 0.6s; }
 </style>
 
 <script>
     {% if habitos %}
-    const primerHabitoId = {{ primer_habito_id }};
-
     function toggleHabit(habitId, date) {
         const formData = new FormData();
         formData.append('habito_id', habitId);
@@ -221,7 +207,8 @@
         .then(data => {
             const btn = document.getElementById('check-' + habitId);
             const svg = btn.querySelector('svg');
-            if (data.status === 'checked') {
+            const isChecked = data.status === 'checked';
+            if (isChecked) {
                 btn.classList.add('bg-green-500', 'border-green-500');
                 btn.classList.remove('border-gray-600', 'hover:border-primary-400');
                 if (svg) svg.style.display = 'block';
@@ -230,6 +217,11 @@
                 btn.classList.add('border-gray-600', 'hover:border-primary-400');
                 if (svg) svg.style.display = 'none';
             }
+            actualizarDotCalendario(habitId, date, isChecked);
+            actualizarDotCard(habitId, date, isChecked);
+            actualizarHechosHoy(isChecked);
+            actualizarRacha(habitId);
+            actualizarDayNumColor(habitId, date, isChecked);
         });
     }
 
@@ -245,12 +237,92 @@
         })
         .then(r => r.json())
         .then(data => {
-            if (data.status === 'checked') {
-                el.className = 'calendar-day aspect-square rounded flex items-center justify-center text-[10px] font-medium cursor-pointer border transition-all duration-200 bg-green-500/20 border-green-500/50 text-green-300';
+            const isChecked = data.status === 'checked';
+            if (isChecked) {
+                el.style.backgroundColor = el.dataset.color;
+                el.dataset.checked = '1';
             } else {
-                el.className = 'calendar-day aspect-square rounded flex items-center justify-center text-[10px] font-medium cursor-pointer border transition-all duration-200 bg-gray-800/50 border-gray-700/50 text-gray-400';
+                el.style.backgroundColor = '#374151';
+                el.dataset.checked = '0';
             }
+            actualizarDotCard(habitId, date, isChecked);
+            if (date === '{{ today_str }}') {
+                const btn = document.getElementById('check-' + habitId);
+                const svg = btn.querySelector('svg');
+                if (isChecked) {
+                    btn.classList.add('bg-green-500', 'border-green-500');
+                    btn.classList.remove('border-gray-600', 'hover:border-primary-400');
+                    if (svg) svg.style.display = 'block';
+                } else {
+                    btn.classList.remove('bg-green-500', 'border-green-500');
+                    btn.classList.add('border-gray-600', 'hover:border-primary-400');
+                    if (svg) svg.style.display = 'none';
+                }
+                actualizarHechosHoy(isChecked);
+            }
+            actualizarRacha(habitId);
+            actualizarDayNumColor(habitId, date, isChecked);
         });
+    }
+
+    function actualizarDotCalendario(habitId, date, isChecked) {
+        const cell = document.querySelector('.calendar-day[title="' + date + '"]');
+        if (!cell) return;
+        const dot = cell.querySelector('.calendar-dot[data-habit="' + habitId + '"]');
+        if (dot) {
+            if (isChecked) {
+                dot.style.backgroundColor = dot.dataset.color;
+                dot.dataset.checked = '1';
+            } else {
+                dot.style.backgroundColor = '#374151';
+                dot.dataset.checked = '0';
+            }
+        }
+    }
+
+    function actualizarDotCard(habitId, date, isChecked) {
+        const dot = document.querySelector('#card-' + habitId + ' .dot[title="' + date + '"]');
+        if (dot) {
+            dot.className = 'dot w-1.5 h-1.5 rounded-sm shrink-0 ' + (isChecked ? 'bg-green-500/60' : 'bg-gray-800') + ' transition-colors duration-150';
+        }
+    }
+
+    function actualizarHechosHoy(isChecked) {
+        const el = document.getElementById('hechos-hoy');
+        if (el) el.textContent = parseInt(el.textContent) + (isChecked ? 1 : -1);
+    }
+
+    function actualizarDayNumColor(habitId, date, isChecked) {
+        const cell = document.querySelector('.calendar-day[title="' + date + '"]');
+        if (cell) {
+            const daySpan = cell.querySelector('span:first-child');
+            if (daySpan) {
+                const anyChecked = cell.querySelector('.calendar-dot[data-checked="1"]');
+                daySpan.className = 'text-[10px] font-medium leading-none mb-px ' + (anyChecked ? 'text-green-300' : 'text-gray-400');
+            }
+        }
+    }
+
+    function actualizarRacha(habitId) {
+        fetch('{% url "datos_estadisticas" %}?habito_id=' + habitId)
+            .then(r => r.json())
+            .then(d => {
+                const valSpan = document.getElementById('racha-' + habitId);
+                if (valSpan) valSpan.textContent = d.racha;
+                const valCard = document.getElementById('racha-val-' + habitId);
+                if (valCard) {
+                    const card = valCard.closest('.racha-card');
+                    if (d.racha > 0) {
+                        valCard.className = 'text-xl font-bold text-orange-400';
+                        valCard.textContent = '\uD83D\uDD25 ' + d.racha;
+                        if (card) card.querySelector('p:last-child').className = 'text-[10px] text-gray-500';
+                    } else {
+                        valCard.className = 'text-xl font-bold text-gray-600';
+                        valCard.textContent = '0';
+                        if (card) card.querySelector('p:last-child').className = 'text-[10px] text-gray-700';
+                    }
+                }
+            });
     }
     {% endif %}
 </script>

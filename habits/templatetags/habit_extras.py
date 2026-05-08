@@ -13,3 +13,8 @@ def traducir(texto, idioma):
 @register.filter
 def obtener(diccionario, llave):
     return diccionario.get(llave)
+
+
+@register.filter
+def algun_hecho(habitos_dict):
+    return any(habitos_dict.values())
