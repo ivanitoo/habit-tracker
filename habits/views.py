@@ -83,10 +83,12 @@ def panel(request):
 
     meses_disponibles = []
     for m in range(1, 13):
+        deshabilitado = m > hoy.month and selected_year >= hoy.year
         meses_disponibles.append({
             "numero": m,
             "nombre": MESES[m - 1],
             "actual": m == selected_month,
+            "deshabilitado": deshabilitado,
         })
 
     today_str = str(hoy)

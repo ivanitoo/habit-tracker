@@ -8,7 +8,7 @@
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
             <h1 class="text-xl sm:text-2xl font-bold">{{ "Panel"|traducir:lang }}</h1>
-            <p class="text-gray-400 text-xs mt-0.5">{{ hoy|date:"l, F j, Y" }}</p>
+            <p class="text-gray-400 text-xs mt-0.5">{{ hoy|formatear_fecha:lang }}</p>
         </div>
         <a href="{% url 'crear_habito' %}" class="inline-flex items-center gap-1.5 px-3 py-2 bg-primary-600 hover:bg-primary-500 text-white font-medium rounded-lg transition-all duration-200 shadow-lg shadow-primary-600/25 text-xs w-full sm:w-auto justify-center">
             <svg class="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
@@ -17,21 +17,33 @@
     </div>
 
     <div class="grid grid-cols-2 lg:grid-cols-4 gap-2">
-        <div class="bg-gray-900/70 border border-gray-800 rounded-lg p-3">
-            <p class="text-[10px] text-gray-400">{{ "Total Habits"|traducir:lang }}</p>
-            <p class="text-lg font-bold mt-0.5">{{ stats.total_habitos }}</p>
+        <div class="stat-card bg-gray-900/70 border border-gray-800 rounded-lg p-3">
+            <div class="flex items-center gap-2 mb-1">
+                <svg class="w-4 h-4 text-primary-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 6h12M6 12h12M6 18h12"/></svg>
+                <p class="text-[10px] text-gray-400">{{ "Total Habits"|traducir:lang }}</p>
+            </div>
+            <p class="text-lg font-bold">{{ stats.total_habitos }}</p>
         </div>
-        <div class="bg-gray-900/70 border border-gray-800 rounded-lg p-3">
-            <p class="text-[10px] text-gray-400">{{ "Hechos hoy"|traducir:lang }}</p>
-            <p id="hechos-hoy" class="text-lg font-bold mt-0.5 text-green-400">{{ stats.hechos_hoy }}</p>
+        <div class="stat-card bg-gray-900/70 border border-gray-800 rounded-lg p-3">
+            <div class="flex items-center gap-2 mb-1">
+                <svg class="w-4 h-4 text-green-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                <p class="text-[10px] text-gray-400">{{ "Hechos hoy"|traducir:lang }}</p>
+            </div>
+            <p id="hechos-hoy" class="text-lg font-bold text-green-400">{{ stats.hechos_hoy }}</p>
         </div>
-        <div class="bg-gray-900/70 border border-gray-800 rounded-lg p-3">
-            <p class="text-[10px] text-gray-400">{{ "Mejor racha"|traducir:lang }}</p>
-            <p class="text-lg font-bold mt-0.5 text-orange-400">{{ stats.mejor_racha }}</p>
+        <div class="stat-card bg-gray-900/70 border border-gray-800 rounded-lg p-3">
+            <div class="flex items-center gap-2 mb-1">
+                <svg class="w-4 h-4 text-orange-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15.362 5.214A8.252 8.252 0 0112 21 8.25 8.25 0 016.038 7.048 8.287 8.287 0 009 9.6a8.983 8.983 0 013.361-6.867 8.21 8.21 0 003 2.48z"/></svg>
+                <p class="text-[10px] text-gray-400">{{ "Mejor racha"|traducir:lang }}</p>
+            </div>
+            <p class="text-lg font-bold text-orange-400">{{ stats.mejor_racha }}</p>
         </div>
-        <div class="bg-gray-900/70 border border-gray-800 rounded-lg p-3">
-            <p class="text-[10px] text-gray-400">{{ "Últimos 30 días"|traducir:lang }}</p>
-            <p class="text-lg font-bold mt-0.5 text-blue-400">{{ stats.total_completados }}</p>
+        <div class="stat-card bg-gray-900/70 border border-gray-800 rounded-lg p-3">
+            <div class="flex items-center gap-2 mb-1">
+                <svg class="w-4 h-4 text-blue-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5"/></svg>
+                <p class="text-[10px] text-gray-400">{{ "Últimos 30 días"|traducir:lang }}</p>
+            </div>
+            <p class="text-lg font-bold text-blue-400">{{ stats.total_completados }}</p>
         </div>
     </div>
 
@@ -45,7 +57,7 @@
                         <select name="mes" onchange="this.form.submit()"
                                 class="text-[11px] bg-gray-800 border border-gray-700 rounded px-2 py-1 text-gray-300 focus:outline-none focus:ring-1 focus:ring-primary-500">
                             {% for m in meses_disponibles %}
-                            <option value="{{ m.numero }}" {% if m.actual %}selected{% endif %}>{{ m.nombre }}</option>
+                            <option value="{{ m.numero }}" {% if m.actual %}selected{% endif %} {% if m.deshabilitado %}disabled class="text-gray-700"{% endif %}>{{ m.nombre }}</option>
                             {% endfor %}
                         </select>
                         <span class="text-[11px] text-gray-500">{{ selected_year }}</span>
@@ -188,6 +200,23 @@
     .calendar-day {
         animation: fadeIn 0.25s ease forwards;
         opacity: 0;
+    }
+    @keyframes statFadeIn {
+        from { opacity: 0; transform: translateY(8px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    .stat-card {
+        animation: statFadeIn 0.4s ease forwards;
+        opacity: 0;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    .stat-card:nth-child(1) { animation-delay: 0ms; }
+    .stat-card:nth-child(2) { animation-delay: 80ms; }
+    .stat-card:nth-child(3) { animation-delay: 160ms; }
+    .stat-card:nth-child(4) { animation-delay: 240ms; }
+    .stat-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
     }
 </style>
 
