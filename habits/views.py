@@ -1,7 +1,6 @@
-import json
+import calendar
 import os
 from datetime import date, timedelta
-from collections import defaultdict
 
 from django.contrib.auth import login
 from django.contrib.auth.decorators import login_required
@@ -13,6 +12,13 @@ from django.db.models import Count
 
 from .models import Habito, RegistroHabito
 from .forms import FormularioHabito
+
+
+MESES = [
+    "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
+    "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre",
+]
+DIAS_SEMANA = ["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"]
 
 
 def inicio(request):
@@ -57,50 +63,62 @@ def panel(request):
         if hoy in registros:
             stats["hechos_hoy"] += 1
 
-    heatmap_semanas = []
-    inicio_heatmap = hoy - timedelta(days=364)
-    semana = []
-    for i in range(365):
-        d = inicio_heatmap + timedelta(days=i)
-        semana.append(d)
-        if d.weekday() == 6 or i == 364:
-            heatmap_semanas.append(semana)
-            semana = []
+    selected_year = int(request.GET.get("ano", hoy.year))
+    selected_month = int(request.GET.get("mes", hoy.month))
+    _, num_days = calendar.monthrange(selected_year, selected_month)
 
     calendario_dias = []
-    dias_semana = ["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"]
-    for i in range(29, -1, -1):
-        d = hoy - timedelta(days=i)
+    for day in range(1, num_days + 1):
+        d = date(selected_year, selected_month, day)
         dia_info = {
             "fecha": d,
             "fecha_str": str(d),
             "num": d.day,
-            "dia_semana": dias_semana[d.weekday()],
-            "mes": d.strftime("%b"),
+            "dia_semana": DIAS_SEMANA[d.weekday()],
             "habitos": {},
         }
         for h in habitos:
-            dia_info["habitos"][h.id] = (
-                str(d) in heatmap_data[h.id]["registros"]
-            )
+            dia_info["habitos"][h.id] = str(d) in heatmap_data[h.id]["registros"]
         calendario_dias.append(dia_info)
+
+    meses_disponibles = []
+    for m in range(1, 13):
+        meses_disponibles.append({
+            "numero": m,
+            "nombre": MESES[m - 1],
+            "actual": m == selected_month,
+        })
 
     today_str = str(hoy)
     checked_hoy = {}
+    total_mes = {}
+    completados_mes = {}
     for h in habitos:
         checked_hoy[h.id] = today_str in heatmap_data[h.id]["registros"]
+        completados = sum(
+            1 for d in calendario_dias
+            if d["habitos"].get(h.id)
+        )
+        completados_mes[h.id] = completados
+        total_mes[h.id] = num_days
 
     ctx = {
         "habitos": habitos,
         "stats": stats,
         "heatmap_data": heatmap_data,
-        "heatmap_semanas": heatmap_semanas,
         "calendario_dias": calendario_dias,
-        "dias_semana": dias_semana,
+        "dias_semana": DIAS_SEMANA,
         "hoy": hoy,
         "today_str": today_str,
         "checked_hoy": checked_hoy,
         "primer_habito_id": habitos.first().id if habitos else None,
+        "selected_month": selected_month,
+        "selected_year": selected_year,
+        "meses_disponibles": meses_disponibles,
+        "mes_actual": MESES[selected_month - 1],
+        "completados_mes": completados_mes,
+        "total_mes": total_mes,
+        "num_days": num_days,
     }
     return render(request, "habits/panel.html", ctx)
 

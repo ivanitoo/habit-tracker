@@ -4,155 +4,203 @@
 {% block title %}{{ "Panel"|traducir:lang }} - Habit Tracker{% endblock %}
 
 {% block content %}
-<div class="space-y-6 max-w-5xl mx-auto">
-    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+<div class="space-y-4 max-w-6xl mx-auto">
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
-            <h1 class="text-2xl sm:text-3xl font-bold">{{ "Panel"|traducir:lang }}</h1>
-            <p class="text-gray-400 text-sm mt-1">{{ hoy|date:"l, F j, Y" }}</p>
+            <h1 class="text-xl sm:text-2xl font-bold">{{ "Panel"|traducir:lang }}</h1>
+            <p class="text-gray-400 text-xs mt-0.5">{{ hoy|date:"l, F j, Y" }}</p>
         </div>
-        <a href="{% url 'crear_habito' %}" class="inline-flex items-center gap-2 px-4 py-2.5 bg-primary-600 hover:bg-primary-500 text-white font-medium rounded-xl transition-all duration-200 shadow-lg shadow-primary-600/25 text-sm w-full sm:w-auto justify-center">
-            <svg class="w-5 h-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
+        <a href="{% url 'crear_habito' %}" class="inline-flex items-center gap-1.5 px-3 py-2 bg-primary-600 hover:bg-primary-500 text-white font-medium rounded-lg transition-all duration-200 shadow-lg shadow-primary-600/25 text-xs w-full sm:w-auto justify-center">
+            <svg class="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
             {{ "Nuevo Hábito"|traducir:lang }}
         </a>
     </div>
 
-    <div class="grid grid-cols-2 lg:grid-cols-4 gap-3">
-        <div class="bg-gray-900/70 border border-gray-800 rounded-xl p-4">
-            <p class="text-xs text-gray-400">{{ "Total Habits"|traducir:lang }}</p>
-            <p class="text-2xl font-bold mt-1">{{ stats.total_habitos }}</p>
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-2">
+        <div class="bg-gray-900/70 border border-gray-800 rounded-lg p-3">
+            <p class="text-[10px] text-gray-400">{{ "Total Habits"|traducir:lang }}</p>
+            <p class="text-lg font-bold mt-0.5">{{ stats.total_habitos }}</p>
         </div>
-        <div class="bg-gray-900/70 border border-gray-800 rounded-xl p-4">
-            <p class="text-xs text-gray-400">{{ "Hechos hoy"|traducir:lang }}</p>
-            <p class="text-2xl font-bold mt-1 text-green-400">{{ stats.hechos_hoy }}</p>
+        <div class="bg-gray-900/70 border border-gray-800 rounded-lg p-3">
+            <p class="text-[10px] text-gray-400">{{ "Hechos hoy"|traducir:lang }}</p>
+            <p class="text-lg font-bold mt-0.5 text-green-400">{{ stats.hechos_hoy }}</p>
         </div>
-        <div class="bg-gray-900/70 border border-gray-800 rounded-xl p-4">
-            <p class="text-xs text-gray-400">{{ "Mejor racha"|traducir:lang }}</p>
-            <p class="text-2xl font-bold mt-1 text-orange-400">{{ stats.mejor_racha }}</p>
+        <div class="bg-gray-900/70 border border-gray-800 rounded-lg p-3">
+            <p class="text-[10px] text-gray-400">{{ "Mejor racha"|traducir:lang }}</p>
+            <p class="text-lg font-bold mt-0.5 text-orange-400">{{ stats.mejor_racha }}</p>
         </div>
-        <div class="bg-gray-900/70 border border-gray-800 rounded-xl p-4">
-            <p class="text-xs text-gray-400">{{ "Últimos 30 días"|traducir:lang }}</p>
-            <p class="text-2xl font-bold mt-1 text-blue-400">{{ stats.total_completados }}</p>
+        <div class="bg-gray-900/70 border border-gray-800 rounded-lg p-3">
+            <p class="text-[10px] text-gray-400">{{ "Últimos 30 días"|traducir:lang }}</p>
+            <p class="text-lg font-bold mt-0.5 text-blue-400">{{ stats.total_completados }}</p>
         </div>
     </div>
 
     {% if habitos %}
-        <div class="bg-gray-900/70 border border-gray-800 rounded-2xl p-4 sm:p-6">
-            <h2 class="text-base sm:text-lg font-semibold mb-4">{{ "Heatmap Anual"|traducir:lang }}</h2>
-            <div class="overflow-x-auto pb-2">
-                {% for h in habitos %}
-                <div class="mb-3 last:mb-0">
-                    <p class="text-xs text-gray-500 mb-1.5">{{ h.nombre }}</p>
-                    <div class="flex gap-px">
-                        {% for semana in heatmap_semanas %}
-                        <div class="flex flex-col gap-px">
-                            {% for dia in semana %}
-                                {% with dia_str=dia|date:"Y-m-d" %}
-                                {% with hdata=heatmap_data|obtener:h.id %}
-                                <div class="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-sm transition-colors duration-150 {% if hdata and hdata.registros|obtener:dia_str %}bg-green-500/80{% else %}bg-gray-800{% endif %}" title="{{ dia_str }}"></div>
-                                {% endwith %}
-                                {% endwith %}
+    <div class="flex flex-col lg:flex-row gap-4">
+        <div class="lg:w-80 shrink-0">
+            <div class="bg-gray-900/70 border border-gray-800 rounded-xl p-3">
+                <div class="flex items-center justify-between mb-2">
+                    <h2 class="text-sm font-semibold">{{ "Progreso"|traducir:lang }}</h2>
+                    <form method="get" class="flex items-center gap-1">
+                        <select name="mes" onchange="this.form.submit()"
+                                class="text-[11px] bg-gray-800 border border-gray-700 rounded px-2 py-1 text-gray-300 focus:outline-none focus:ring-1 focus:ring-primary-500">
+                            {% for m in meses_disponibles %}
+                            <option value="{{ m.numero }}" {% if m.actual %}selected{% endif %}>{{ m.nombre }}</option>
                             {% endfor %}
+                        </select>
+                        <span class="text-[11px] text-gray-500">{{ selected_year }}</span>
+                    </form>
+                </div>
+                <div class="grid grid-cols-7 gap-0.5">
+                    {% for dia in dias_semana %}
+                        <div class="text-center text-[9px] text-gray-500 font-medium pb-1">{{ dia }}</div>
+                    {% endfor %}
+                    {% for dia in calendario_dias %}
+                        {% if dia.fecha > hoy %}
+                        <div class="aspect-square rounded flex items-center justify-center text-[10px] font-medium text-gray-700">
+                            {{ dia.num }}
                         </div>
+                        {% else %}
+                        <div class="calendar-day aspect-square rounded flex items-center justify-center text-[10px] font-medium cursor-pointer border transition-all duration-200
+                                    {% if dia.habitos|obtener:primer_habito_id %}bg-green-500/20 border-green-500/50 text-green-300{% else %}bg-gray-800/50 border-gray-700/50 text-gray-400{% endif %}"
+                             onclick="toggleCalendario({{ primer_habito_id }}, '{{ dia.fecha_str }}', this)"
+                             title="{{ dia.fecha_str }}">
+                            {{ dia.num }}
+                        </div>
+                        {% endif %}
+                    {% endfor %}
+                </div>
+                <div class="flex items-center gap-2 mt-2 text-[10px] text-gray-500">
+                    <span class="flex items-center gap-1"><span class="w-2 h-2 rounded bg-green-500/30 border border-green-500/50 inline-block"></span> Hecho</span>
+                    <span class="flex items-center gap-1"><span class="w-2 h-2 rounded bg-gray-800/50 border border-gray-700/50 inline-block"></span> Pendiente</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="flex-1 min-w-0">
+            <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3">
+                {% for h in habitos %}
+                <div class="bg-gray-900/70 border border-gray-800 rounded-xl p-3 hover:border-gray-700 transition-colors">
+                    <div class="flex items-center justify-between mb-2">
+                        <div class="flex items-center gap-2 min-w-0">
+                            <button type="button" onclick="toggleHabit({{ h.id }}, '{{ today_str }}')"
+                                    class="w-5 h-5 rounded border-2 flex items-center justify-center shrink-0 cursor-pointer transition-all duration-150
+                                    {% if checked_hoy|obtener:h.id %}
+                                    bg-green-500 border-green-500
+                                    {% else %}
+                                    border-gray-600 hover:border-primary-400
+                                    {% endif %}"
+                                    id="check-{{ h.id }}">
+                                <svg class="w-3 h-3 text-white pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"
+                                     style="display:{% if checked_hoy|obtener:h.id %}block{% else %}none{% endif %};">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
+                                </svg>
+                            </button>
+                            <span class="font-medium text-xs truncate">{{ h.nombre }}</span>
+                        </div>
+                        <div class="flex items-center gap-1 shrink-0">
+                            <a href="{% url 'editar_habito' h.id %}" class="p-1 text-gray-600 hover:text-white transition-colors">
+                                <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                            </a>
+                            <a href="{% url 'eliminar_habito' h.id %}" class="p-1 text-gray-600 hover:text-red-400 transition-colors">
+                                <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                            </a>
+                        </div>
+                    </div>
+                    <div class="flex gap-3 text-[10px] text-gray-500 mb-1.5">
+                        <span>{{ h.total_completados }} {{ "totales"|traducir:lang }}</span>
+                        <span>{{ h.tasa_30d }}% {{ "tasa"|traducir:lang }}</span>
+                        <span>{{ "Racha"|traducir:lang }}: {{ h.racha_actual }}</span>
+                    </div>
+                    <div class="flex gap-px overflow-x-auto">
+                        {% for dia in calendario_dias %}
+                        <div class="w-1.5 h-1.5 rounded-sm shrink-0 {% if dia.habitos|obtener:h.id %}bg-green-500/60{% else %}bg-gray-800{% endif %}"
+                             title="{{ dia.fecha_str }}"></div>
                         {% endfor %}
                     </div>
                 </div>
                 {% endfor %}
             </div>
         </div>
+    </div>
 
-        <div class="bg-gray-900/70 border border-gray-800 rounded-2xl p-4 sm:p-6">
-            <h2 class="text-base sm:text-lg font-semibold mb-1">{{ "Progreso 30 Días"|traducir:lang }}</h2>
-            <p class="text-xs text-gray-500 mb-4">{{ calendario_dias.0.mes }} - {{ calendario_dias|last|obtener:"mes" }}</p>
-            <div class="overflow-x-auto pb-2">
-                <div class="grid grid-cols-7 gap-1.5 min-w-[280px]">
-                    {% for dia in dias_semana %}
-                        <div class="text-center text-xs text-gray-500 font-medium pb-1">{{ dia }}</div>
-                    {% endfor %}
-                    {% for dia in calendario_dias %}
-                        <div class="calendar-day aspect-square rounded-lg flex items-center justify-center text-xs font-medium transition-all duration-150 cursor-pointer border {% if dia.habitos|obtener:primer_habito_id %}bg-green-500/20 border-green-500/50 text-green-300{% else %}bg-gray-800/50 border-gray-700/50 text-gray-400 hover:bg-gray-700/50{% endif %}"
-                             onclick="toggleCalendario({{ primer_habito_id }}, '{{ dia.fecha_str }}', this)"
-                             title="{{ dia.fecha_str }}">
-                            {{ dia.num }}
-                        </div>
-                    {% endfor %}
-                </div>
-            </div>
-            <div class="flex items-center gap-3 mt-3 text-xs text-gray-500">
-                <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded bg-green-500/20 border border-green-500/50 inline-block"></span> Completado</span>
-                <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded bg-gray-800/50 border border-gray-700/50 inline-block"></span> Pendiente</span>
-            </div>
-        </div>
-
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+    <div class="bg-gray-900/70 border border-gray-800 rounded-xl p-4">
+        <h2 class="text-sm font-semibold mb-3">{{ "Rendimiento mensual"|traducir:lang }}</h2>
+        <div class="space-y-3">
             {% for h in habitos %}
-            <div class="bg-gray-900/70 border border-gray-800 rounded-xl p-4 hover:border-gray-700 transition-colors">
-                <div class="flex items-center justify-between mb-3">
-                    <div class="flex items-center gap-2">
-                        <button type="button" onclick="toggleHabit({{ h.id }}, '{{ today_str }}')"
-                                class="w-6 h-6 rounded-md border-2 flex items-center justify-center shrink-0 cursor-pointer transition-all duration-150
-                                {% if checked_hoy|obtener:h.id %}
-                                bg-green-500 border-green-500
-                                {% else %}
-                                border-gray-600 hover:border-primary-400
-                                {% endif %}"
-                                id="check-{{ h.id }}">
-                            <svg class="w-4 h-4 text-white pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"
-                                 style="display:{% if checked_hoy|obtener:h.id %}block{% else %}none{% endif %};">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
-                            </svg>
-                        </button>
-                        <span class="font-medium text-sm">{{ h.nombre }}</span>
-                    </div>
-                    <div class="flex items-center gap-1.5">
-                        <a href="{% url 'editar_habito' h.id %}" class="p-1.5 text-gray-600 hover:text-white transition-colors">
-                            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
-                        </a>
-                        <a href="{% url 'eliminar_habito' h.id %}" class="p-1.5 text-gray-600 hover:text-red-400 transition-colors">
-                            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
-                        </a>
-                    </div>
+            <div>
+                <div class="flex items-center justify-between mb-1">
+                    <span class="text-xs text-gray-400">{{ h.nombre }}</span>
+                    <span class="text-[11px] text-gray-500">{{ completados_mes|obtener:h.id }}/{{ total_mes|obtener:h.id }} días</span>
                 </div>
-                <div class="flex gap-4 text-xs text-gray-500">
-                    <span>{{ h.total_completados }} {{ "totales"|traducir:lang }}</span>
-                    <span>{{ h.tasa_30d }}% {{ "tasa"|traducir:lang }}</span>
-                    <span>{{ "Racha"|traducir:lang }}: {{ h.racha_actual }}</span>
-                </div>
-                <div class="mt-2 flex gap-px overflow-x-auto">
-                    {% for dia in calendario_dias %}
-                    <div class="w-2 h-2 rounded-sm shrink-0 {% if dia.habitos|obtener:h.id %}bg-green-500/60{% else %}bg-gray-800{% endif %}"
-                         title="{{ dia.fecha_str }}"></div>
-                    {% endfor %}
+                <div class="w-full h-2 bg-gray-800 rounded-full overflow-hidden">
+                    {% widthratio completados_mes|obtener:h.id total_mes|obtener:h.id 100 as pct_width %}
+                    <div class="h-full rounded-full transition-all duration-500"
+                         style="width:{% if pct_width > 100 %}100{% else %}{{ pct_width }}{% endif %}%; background-color: {{ h.color }};"></div>
                 </div>
             </div>
             {% endfor %}
         </div>
+    </div>
     {% else %}
-        <div class="text-center py-16 bg-gray-900/70 border border-gray-800 rounded-2xl">
-            <svg class="w-12 h-12 text-gray-700 mx-auto mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-            </svg>
-            <h2 class="text-lg font-semibold mb-1">{{ "No hay hábitos aún"|traducir:lang }}</h2>
-            <p class="text-gray-400 text-sm mb-4">{{ "Crea tu primer hábito"|traducir:lang }}</p>
-            <a href="{% url 'crear_habito' %}" class="inline-flex items-center gap-2 px-5 py-2.5 bg-primary-600 hover:bg-primary-500 text-white font-medium rounded-xl transition-all duration-200 shadow-lg shadow-primary-600/25 text-sm">
-                <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
-                {{ "Nuevo Hábito"|traducir:lang }}
-            </a>
-        </div>
+    <div class="text-center py-12 bg-gray-900/70 border border-gray-800 rounded-2xl">
+        <svg class="w-10 h-10 text-gray-700 mx-auto mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+        </svg>
+        <h2 class="text-base font-semibold mb-1">{{ "No hay hábitos aún"|traducir:lang }}</h2>
+        <p class="text-gray-400 text-xs mb-3">{{ "Crea tu primer hábito para empezar"|traducir:lang }}</p>
+        <a href="{% url 'crear_habito' %}" class="inline-flex items-center gap-1.5 px-4 py-2 bg-primary-600 hover:bg-primary-500 text-white font-medium rounded-lg transition-all duration-200 shadow-lg shadow-primary-600/25 text-xs">
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
+            {{ "Nuevo Hábito"|traducir:lang }}
+        </a>
+    </div>
     {% endif %}
 </div>
 
 <style>
     .calendar-day:hover {
-        transform: scale(1.15);
+        border-color: rgba(255, 255, 255, 0.3) !important;
+        transform: scale(1.1);
     }
     @keyframes fadeIn {
-        from { opacity: 0; transform: translateY(4px); }
+        from { opacity: 0; transform: translateY(3px); }
         to { opacity: 1; transform: translateY(0); }
     }
     .calendar-day {
-        animation: fadeIn 0.3s ease forwards;
+        animation: fadeIn 0.25s ease forwards;
         opacity: 0;
     }
+    .calendar-day:nth-child(1) { animation-delay: 0s; }
+    .calendar-day:nth-child(2) { animation-delay: 0.02s; }
+    .calendar-day:nth-child(3) { animation-delay: 0.04s; }
+    .calendar-day:nth-child(4) { animation-delay: 0.06s; }
+    .calendar-day:nth-child(5) { animation-delay: 0.08s; }
+    .calendar-day:nth-child(6) { animation-delay: 0.1s; }
+    .calendar-day:nth-child(7) { animation-delay: 0.12s; }
+    .calendar-day:nth-child(8) { animation-delay: 0.14s; }
+    .calendar-day:nth-child(9) { animation-delay: 0.16s; }
+    .calendar-day:nth-child(10) { animation-delay: 0.18s; }
+    .calendar-day:nth-child(11) { animation-delay: 0.2s; }
+    .calendar-day:nth-child(12) { animation-delay: 0.22s; }
+    .calendar-day:nth-child(13) { animation-delay: 0.24s; }
+    .calendar-day:nth-child(14) { animation-delay: 0.26s; }
+    .calendar-day:nth-child(15) { animation-delay: 0.28s; }
+    .calendar-day:nth-child(16) { animation-delay: 0.3s; }
+    .calendar-day:nth-child(17) { animation-delay: 0.32s; }
+    .calendar-day:nth-child(18) { animation-delay: 0.34s; }
+    .calendar-day:nth-child(19) { animation-delay: 0.36s; }
+    .calendar-day:nth-child(20) { animation-delay: 0.38s; }
+    .calendar-day:nth-child(21) { animation-delay: 0.4s; }
+    .calendar-day:nth-child(22) { animation-delay: 0.42s; }
+    .calendar-day:nth-child(23) { animation-delay: 0.44s; }
+    .calendar-day:nth-child(24) { animation-delay: 0.46s; }
+    .calendar-day:nth-child(25) { animation-delay: 0.48s; }
+    .calendar-day:nth-child(26) { animation-delay: 0.5s; }
+    .calendar-day:nth-child(27) { animation-delay: 0.52s; }
+    .calendar-day:nth-child(28) { animation-delay: 0.54s; }
+    .calendar-day:nth-child(29) { animation-delay: 0.56s; }
+    .calendar-day:nth-child(30) { animation-delay: 0.58s; }
+    .calendar-day:nth-child(31) { animation-delay: 0.6s; }
 </style>
 
 <script>
@@ -198,9 +246,9 @@
         .then(r => r.json())
         .then(data => {
             if (data.status === 'checked') {
-                el.className = 'calendar-day aspect-square rounded-lg flex items-center justify-center text-xs font-medium transition-all duration-150 cursor-pointer border bg-green-500/20 border-green-500/50 text-green-300';
+                el.className = 'calendar-day aspect-square rounded flex items-center justify-center text-[10px] font-medium cursor-pointer border transition-all duration-200 bg-green-500/20 border-green-500/50 text-green-300';
             } else {
-                el.className = 'calendar-day aspect-square rounded-lg flex items-center justify-center text-xs font-medium transition-all duration-150 cursor-pointer border bg-gray-800/50 border-gray-700/50 text-gray-400 hover:bg-gray-700/50';
+                el.className = 'calendar-day aspect-square rounded flex items-center justify-center text-[10px] font-medium cursor-pointer border transition-all duration-200 bg-gray-800/50 border-gray-700/50 text-gray-400';
             }
         });
     }
