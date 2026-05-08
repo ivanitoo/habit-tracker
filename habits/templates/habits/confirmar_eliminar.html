@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% load habit_extras %}
+
+{% block title %}{{ "Eliminar hábito"|traducir:lang }} - Habit Tracker{% endblock %}
+
+{% block content %}
+<div class="h-full flex items-center justify-center">
+    <div class="w-full max-w-md">
+        <div class="bg-gray-900 border border-gray-800 rounded-2xl p-8 text-center">
+            <svg class="w-16 h-16 text-red-400 mx-auto mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z"/>
+            </svg>
+            <h1 class="text-2xl font-bold mb-2">{{ "Eliminar"|traducir:lang }} "{{ habito.nombre }}"</h1>
+            <p class="text-gray-400 mb-6">{{ "Esta acción no se puede deshacer"|traducir:lang }}</p>
+            <form method="post" class="flex gap-3 justify-center">
+                {% csrf_token %}
+                <button type="submit" class="px-6 py-3 bg-red-600 hover:bg-red-500 text-white font-medium rounded-xl transition-all duration-200">
+                    {{ "Eliminar"|traducir:lang }}
+                </button>
+                <a href="{% url 'panel' %}" class="px-6 py-3 bg-gray-800 hover:bg-gray-700 text-gray-300 font-medium rounded-xl transition-all duration-200 border border-gray-700">
+                    {{ "Cancelar"|traducir:lang }}
+                </a>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

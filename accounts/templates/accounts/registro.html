@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% load habit_extras %}
+
+{% block title %}{{ "Crear Cuenta"|traducir:lang }} - Habit Tracker{% endblock %}
+
+{% block content %}
+<div class="h-full flex items-center justify-center">
+    <div class="w-full max-w-md">
+        <div class="text-center mb-8">
+            <h1 class="text-3xl font-bold">{{ "Crear Cuenta"|traducir:lang }}</h1>
+            <p class="text-gray-400 mt-2">{{ "Empieza a registrar tus hábitos hoy"|traducir:lang }}</p>
+        </div>
+        <form method="post" class="bg-gray-900 border border-gray-800 rounded-2xl p-8 space-y-6">
+            {% csrf_token %}
+            {% for field in form %}
+                <div>
+                    <label for="{{ field.id_for_label }}" class="block text-sm font-medium text-gray-300 mb-2">{{ field.label }}</label>
+                    {{ field }}
+                    {% if field.help_text %}
+                        <p class="mt-1 text-xs text-gray-500">{{ field.help_text }}</p>
+                    {% endif %}
+                    {% for error in field.errors %}
+                        <p class="mt-1 text-sm text-red-400">{{ error }}</p>
+                    {% endfor %}
+                </div>
+            {% endfor %}
+            <button type="submit" class="w-full py-3 px-4 bg-primary-600 hover:bg-primary-500 text-white font-medium rounded-xl transition-all duration-200 shadow-lg shadow-primary-600/25">
+                {{ "Crear Cuenta"|traducir:lang }}
+            </button>
+            <p class="text-center text-sm text-gray-400">
+                {{ "¿Ya tienes cuenta?"|traducir:lang }} <a href="{% url 'iniciar_sesion' %}" class="text-primary-400 hover:text-primary-300 font-medium">{{ "Iniciar sesión"|traducir:lang }}</a>
+            </p>
+        </form>
+    </div>
+</div>
+
+<script>
+    document.querySelectorAll('form input').forEach(el => {
+        el.classList.add('w-full', 'px-4', 'py-2.5', 'bg-gray-800', 'border', 'border-gray-700', 'rounded-lg', 'text-white', 'placeholder-gray-500', 'focus:outline-none', 'focus:ring-2', 'focus:ring-primary-500', 'focus:border-transparent', 'transition-all');
+    });
+</script>
+{% endblock %}
