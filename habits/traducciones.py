@@ -48,6 +48,12 @@ TRADUCCIONES = {
         "Eliminar hábito": "Delete habit",
         "¿Eliminar este hábito?": "Delete this habit?",
         "Esta acción no se puede deshacer": "This action cannot be undone. All records will be permanently removed.",
+        "Rachas": "Streaks",
+        "Mantén el impulso día tras día": "Keep your momentum day after day",
+        "Calendario": "Calendar",
+        "Visualiza tus hábitos cada mes": "Visualize your habits each month",
+        "Estadísticas": "Statistics",
+        "Gráficos y progreso que motivan": "Charts and progress that motivate",
     },
     "es": {
         "Habit Tracker": "Habit Tracker",
@@ -98,6 +104,12 @@ TRADUCCIONES = {
         "Eliminar hábito": "Eliminar hábito",
         "¿Eliminar este hábito?": '¿Eliminar este hábito?',
         "Esta acción no se puede deshacer": "Esta acción no se puede deshacer. Todos los registros se eliminarán permanentemente.",
+        "Rachas": "Rachas",
+        "Mantén el impulso día tras día": "Mantén el impulso día tras día",
+        "Calendario": "Calendario",
+        "Visualiza tus hábitos cada mes": "Visualiza tus hábitos cada mes",
+        "Estadísticas": "Estadísticas",
+        "Gráficos y progreso que motivan": "Gráficos y progreso que motivan",
     },
 }
 
