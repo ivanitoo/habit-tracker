@@ -1,72 +1,48 @@
 # Habit Tracker
 
-A modern habit tracking web app built with Django. Track your daily habits, maintain streaks, and visualize your progress with an interactive dashboard featuring a GitHub-style heatmap and charts.
+Aplicación web para registrar hábitos diarios con Django. Panel mensual interactivo, rachas, toggle EN/ES y diseño dark.
 
-## Features
+## Funcionalidades
 
-- User registration and authentication
-- Create, edit, and delete habits (daily/weekly)
-- One-click habit check-in with AJAX
-- GitHub-style yearly heatmap for each habit
-- 30-day progress bar chart
-- Streak tracking
-- Completion rate statistics
-- Modern dark UI with Tailwind CSS
+- Registro e inicio de sesión con mensajes de error en español
+- Crear, editar y eliminar hábitos (diarios/semanales)
+- Check instantáneo con AJAX (sin recargar la página)
+- Calendario mensual con puntitos de colores por hábito
+- Barra de progreso de 31 días por hábito
+- Rachas actuales con indicador visual
+- Filtro por mes (2026)
+- Toggle de idioma español/inglés
+- Diseño responsive dark con Tailwind CSS
 
-## Quick Start
+## Inicio rápido
 
 ```bash
-# Clone & enter directory
 cd habit_tracker
-
-# Install dependencies
 pip install -r requirements.txt
-
-# Run migrations
 python manage.py migrate
-
-# Create a superuser (admin)
 python manage.py createsuperuser
-
-# Start the server
 python manage.py runserver
 ```
 
-Visit `http://127.0.0.1:8000` to use the app. Admin panel at `/admin/`.
+Visitar `http://127.0.0.1:8000`
 
-## Deploy to Render (Free)
+## Deploy en Render (gratis)
 
-This project is ready to deploy on [Render](https://render.com) free tier.
-
-1. Push this repo to GitHub
-2. In Render dashboard, create a **New Web Service**
-3. Connect your GitHub repo
-4. Use these settings:
-   - **Runtime**: Python 3
-   - **Build Command**: `pip install -r requirements.txt && python manage.py migrate && python manage.py collectstatic --noinput`
-   - **Start Command**: `gunicorn habit_tracker.wsgi`
-5. Add environment variable:
-   - `DJANGO_SECRET_KEY`: generate one with `python -c "import secrets; print(secrets.token_urlsafe(50))"`
+1. Subir el repo a GitHub
+2. En Render, crear **New Web Service** y conectar el repo
+3. **Build Command:** `pip install -r requirements.txt && python manage.py migrate && python manage.py collectstatic --noinput`
+4. **Start Command:** `gunicorn habit_tracker.wsgi`
+5. Variables de entorno:
+   - `DJANGO_SECRET_KEY`: generar con `python -c "import secrets; print(secrets.token_urlsafe(50))"`
    - `DJANGO_DEBUG`: `False`
    - `DJANGO_ALLOWED_HOSTS`: `.onrender.com`
-6. Deploy!
-
-### PostgreSQL (optional but recommended)
-
-After deploying, create a PostgreSQL database in Render and add the `DATABASE_URL` env var. Then update `settings.py` to use it:
-
-```python
-import dj_database_url
-DATABASES["default"] = dj_database_url.config(conn_max_age=600)
-```
-
-Add `dj-database-url` to `requirements.txt`.
+   - `DJANGO_CSRF_TRUSTED_ORIGINS`: `https://tu-app.onrender.com`
+   - `DATABASE_URL`: (opcional) URL de PostgreSQL en Render
 
 ## Tech Stack
 
 - Django 5.x
 - Tailwind CSS (CDN)
-- Chart.js
 - SQLite (dev) / PostgreSQL (prod)
 - Whitenoise (static files)
 - Gunicorn (production server)
