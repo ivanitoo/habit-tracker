@@ -75,6 +75,7 @@ def panel(request):
             "fecha_str": str(d),
             "num": d.day,
             "dia_semana": DIAS_SEMANA[d.weekday()],
+            "weekday": d.weekday(),
             "habitos": {},
         }
         for h in habitos:
@@ -95,8 +96,13 @@ def panel(request):
     checked_hoy = {}
     total_mes = {}
     completados_mes = {}
+    hoy_es_dia_habito = {}
     for h in habitos:
         checked_hoy[h.id] = today_str in heatmap_data[h.id]["registros"]
+        if h.frecuencia == "weekly" and h.dia_semana is not None:
+            hoy_es_dia_habito[h.id] = hoy.weekday() == h.dia_semana
+        else:
+            hoy_es_dia_habito[h.id] = True
         completados = sum(
             1 for d in calendario_dias
             if d["habitos"].get(h.id)
@@ -113,6 +119,7 @@ def panel(request):
         "hoy": hoy,
         "today_str": today_str,
         "checked_hoy": checked_hoy,
+        "hoy_es_dia_habito": hoy_es_dia_habito,
         "primer_habito_id": habitos.first().id if habitos else None,
         "selected_month": selected_month,
         "selected_year": selected_year,

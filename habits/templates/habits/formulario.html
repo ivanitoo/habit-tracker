@@ -12,9 +12,40 @@
         <form method="post" class="bg-gray-900 border border-gray-800 rounded-2xl p-8 space-y-6">
             {% csrf_token %}
             {% for field in form %}
-            <div>
-                <label for="{{ field.id_for_label }}" class="block text-sm font-medium text-gray-300 mb-2">{{ field.label }}</label>
+            <div id="field-{{ field.name }}" class="{% if field.name == 'dia_semana' %}hidden{% endif %}">
+                <label for="{{ field.id_for_label }}" class="block text-sm font-medium text-gray-300 mb-2">
+                    {% if field.name == "dia_semana" %}
+                        {{ "Día de la semana"|traducir:lang }}
+                    {% else %}
+                        {{ field.label }}
+                    {% endif %}
+                </label>
+                {% if field.name == "dia_semana" %}
+                <select name="{{ field.name }}" id="{{ field.id_for_label }}"
+                        class="w-full px-4 py-2.5 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all">
+                    <option value="">{{ "Selecciona un día"|traducir:lang }}</option>
+                    {% for value, label in field.field.widget.choices %}
+                        {% if value != "" %}
+                        <option value="{{ value }}" {% if field.value|stringformat:"s" == value|stringformat:"s" %}selected{% endif %}>
+                            {{ label|traducir:lang }}
+                        </option>
+                        {% endif %}
+                    {% endfor %}
+                </select>
+                {% elif field.name == "frecuencia" %}
+                <select name="{{ field.name }}" id="{{ field.id_for_label }}"
+                        class="w-full px-4 py-2.5 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all"
+                        onchange="toggleDiaSemana(this)">
+                    {% for value, label in field.field.widget.choices %}
+                    <option value="{{ value }}" {% if field.value == value %}selected{% endif %}>{{ label|traducir:lang }}</option>
+                    {% endfor %}
+                </select>
+                {% elif field.name == "color" %}
+                <input type="color" name="{{ field.name }}" id="{{ field.id_for_label }}" value="{{ field.value|default:'#6366f1' }}"
+                       class="w-full h-10 px-1 py-1 bg-gray-800 border border-gray-700 rounded-lg cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary-500">
+                {% else %}
                 {{ field }}
+                {% endif %}
                 {% for error in field.errors %}
                 <p class="mt-1 text-sm text-red-400">{{ error }}</p>
                 {% endfor %}
@@ -33,12 +64,30 @@
 </div>
 
 <script>
-    document.querySelectorAll('form input, form select, form textarea').forEach(el => {
+    document.querySelectorAll('form input:not([type="color"]):not([type="hidden"]), form select, form textarea').forEach(el => {
         if (el.type !== 'color') {
             el.classList.add('w-full', 'px-4', 'py-2.5', 'bg-gray-800', 'border', 'border-gray-700', 'rounded-lg', 'text-white', 'placeholder-gray-500', 'focus:outline-none', 'focus:ring-2', 'focus:ring-primary-500', 'focus:border-transparent', 'transition-all');
-        } else {
-            el.classList.add('w-full', 'h-10', 'px-1', 'py-1', 'bg-gray-800', 'border', 'border-gray-700', 'rounded-lg', 'cursor-pointer', 'focus:outline-none', 'focus:ring-2', 'focus:ring-primary-500');
         }
     });
+
+    function toggleDiaSemana(select) {
+        var field = document.getElementById('field-dia_semana');
+        if (select.value === 'weekly') {
+            field.classList.remove('hidden');
+            field.style.opacity = '0';
+            setTimeout(function() { field.style.opacity = '1'; }, 10);
+            field.style.transition = 'opacity 0.3s ease';
+        } else {
+            field.style.opacity = '0';
+            setTimeout(function() { field.classList.add('hidden'); }, 300);
+        }
+    }
+
+    (function() {
+        var freq = document.querySelector('select[name="frecuencia"]');
+        if (freq && freq.value === 'weekly') {
+            document.getElementById('field-dia_semana').classList.remove('hidden');
+        }
+    })();
 </script>
 {% endblock %}

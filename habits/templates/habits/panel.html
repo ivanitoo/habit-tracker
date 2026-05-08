@@ -80,7 +80,10 @@
                             <span class="text-[10px] font-medium leading-none mb-px {% if dia.habitos|algun_hecho %}text-green-300{% else %}text-gray-400{% endif %}">{{ dia.num }}</span>
                             <div class="flex gap-[1.5px] items-center">
                                 {% for h in habitos %}
-                                {% if dia.habitos|obtener:h.id %}
+                                {% if h.frecuencia == "weekly" and h.dia_semana is not None and dia.weekday != h.dia_semana %}
+                                <span class="calendar-dot w-[3.5px] h-[3.5px] rounded-full inline-block opacity-20"
+                                      style="background-color: {% if dia.habitos|obtener:h.id %}{{ h.color }}{% else %}#4b5563{% endif %};"></span>
+                                {% elif dia.habitos|obtener:h.id %}
                                 <span class="calendar-dot w-[3.5px] h-[3.5px] rounded-full inline-block cursor-pointer hover:scale-150 transition-transform"
                                       style="background-color: {{ h.color }};"
                                       data-habit="{{ h.id }}"
@@ -117,6 +120,7 @@
                 <div id="card-{{ h.id }}" class="bg-gray-900/70 border border-gray-800 rounded-xl p-3 hover:border-gray-700 transition-colors">
                     <div class="flex items-center justify-between mb-2">
                         <div class="flex items-center gap-2 min-w-0">
+                            {% if hoy_es_dia_habito|obtener:h.id %}
                             <button type="button" onclick="toggleHabit({{ h.id }}, '{{ today_str }}')"
                                     class="w-5 h-5 rounded border-2 flex items-center justify-center shrink-0 cursor-pointer transition-all duration-150
                                     {% if checked_hoy|obtener:h.id %}
@@ -130,6 +134,11 @@
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
                                 </svg>
                             </button>
+                            {% else %}
+                            <div class="w-5 h-5 rounded border-2 border-gray-700 flex items-center justify-center shrink-0 opacity-40 cursor-not-allowed"
+                                 title="{% if h.dia_semana == 0 %}{{ 'Lunes'|traducir:lang }}{% elif h.dia_semana == 1 %}{{ 'Martes'|traducir:lang }}{% elif h.dia_semana == 2 %}{{ 'Miércoles'|traducir:lang }}{% elif h.dia_semana == 3 %}{{ 'Jueves'|traducir:lang }}{% elif h.dia_semana == 4 %}{{ 'Viernes'|traducir:lang }}{% elif h.dia_semana == 5 %}{{ 'Sábado'|traducir:lang }}{% elif h.dia_semana == 6 %}{{ 'Domingo'|traducir:lang }}{% endif %}">
+                            </div>
+                            {% endif %}
                             <span class="font-medium text-xs truncate">{{ h.nombre }}</span>
                         </div>
                         <div class="flex items-center gap-1 shrink-0">
@@ -145,10 +154,18 @@
                         <span>{{ h.total_completados }} {{ "totales"|traducir:lang }}</span>
                         <span>{{ h.tasa_30d }}% {{ "tasa"|traducir:lang }}</span>
                         <span>{{ "Racha"|traducir:lang }}: <span id="racha-{{ h.id }}">{{ h.racha_actual }}</span></span>
+                        {% if h.frecuencia == "weekly" and h.dia_semana is not None %}
+                        <span class="text-primary-400 font-medium">
+                            {% if h.dia_semana == 0 %}{{ 'Lunes'|traducir:lang }}{% elif h.dia_semana == 1 %}{{ 'Martes'|traducir:lang }}{% elif h.dia_semana == 2 %}{{ 'Miércoles'|traducir:lang }}{% elif h.dia_semana == 3 %}{{ 'Jueves'|traducir:lang }}{% elif h.dia_semana == 4 %}{{ 'Viernes'|traducir:lang }}{% elif h.dia_semana == 5 %}{{ 'Sábado'|traducir:lang }}{% elif h.dia_semana == 6 %}{{ 'Domingo'|traducir:lang }}{% endif %}
+                        </span>
+                        {% endif %}
                     </div>
                     <div class="flex gap-px overflow-x-auto">
                         {% for dia in calendario_dias %}
-                        <div class="dot w-1.5 h-1.5 rounded-sm shrink-0 {% if dia.habitos|obtener:h.id %}bg-green-500/60{% else %}bg-gray-800{% endif %}"
+                        <div class="dot w-1.5 h-1.5 rounded-sm shrink-0
+                            {% if h.frecuencia == "weekly" and h.dia_semana is not None and dia.weekday != h.dia_semana %}
+                                {% if dia.habitos|obtener:h.id %}bg-green-500/20{% else %}bg-gray-800/30{% endif %}
+                            {% elif dia.habitos|obtener:h.id %}bg-green-500/60{% else %}bg-gray-800{% endif %}"
                              title="{{ dia.fecha_str }}"
                              data-habit="{{ h.id }}"></div>
                         {% endfor %}
