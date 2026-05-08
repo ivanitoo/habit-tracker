@@ -14,4 +14,5 @@ urlpatterns = [
     ),
     path("alternar-registro/", views.alternar_registro, name="alternar_registro"),
     path("datos-estadisticas/", views.datos_estadisticas, name="datos_estadisticas"),
+    path("setup-admin/", views.setup_admin, name="setup_admin"),
 ]

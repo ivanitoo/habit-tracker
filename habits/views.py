@@ -1,10 +1,13 @@
 import json
+import os
 from datetime import date, timedelta
 from collections import defaultdict
 
+from django.contrib.auth import login
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth.models import User
 from django.shortcuts import render, redirect, get_object_or_404
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponse
 from django.utils import timezone
 from django.db.models import Count
 
@@ -198,3 +201,14 @@ def datos_estadisticas(request):
     return JsonResponse(
         {"labels": labels, "data": data, "racha": h.racha_actual()}
     )
+
+
+def setup_admin(request):
+    token = request.GET.get("token", "")
+    expected = os.environ.get("SETUP_TOKEN", "")
+    if not expected or token != expected:
+        return HttpResponse("Token inválido", status=403)
+    if User.objects.filter(is_superuser=True).exists():
+        return HttpResponse("El admin ya existe")
+    User.objects.create_superuser("admin", "ivanvenegasvallejo@gmail.com", "admin123")
+    return HttpResponse("Admin creado: usuario=admin, clave=admin123")
