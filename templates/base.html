@@ -6,7 +6,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Habit Tracker{% endblock %}</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
     <script>
         tailwind.config = {
             theme: {
@@ -35,6 +34,7 @@
                         {{ lang|upper }} / {% if lang == "es" %}EN{% else %}ES{% endif %}
                     </a>
                     {% if user.is_authenticated %}
+                        <span class="text-sm text-gray-400 hidden sm:inline">{{ user.username }}</span>
                         <a href="{% url 'crear_habito' %}" class="inline-flex items-center gap-1.5 px-4 py-2 bg-primary-600 hover:bg-primary-500 text-white text-sm font-medium rounded-lg transition-all duration-200 shadow-lg shadow-primary-600/25">
                             <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
                             {{ "Nuevo Hábito"|traducir:lang }}

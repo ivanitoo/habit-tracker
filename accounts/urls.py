@@ -1,6 +1,7 @@
 from django.urls import path
 from django.contrib.auth import views as auth_views
 from . import views
+from .forms import FormularioLogin
 
 urlpatterns = [
     path("registro/", views.registro, name="registro"),
@@ -9,6 +10,7 @@ urlpatterns = [
         auth_views.LoginView.as_view(
             template_name="accounts/iniciar_sesion.html",
             redirect_authenticated_user=True,
+            authentication_form=FormularioLogin,
         ),
         name="iniciar_sesion",
     ),

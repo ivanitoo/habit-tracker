@@ -67,39 +67,40 @@ def panel(request):
             heatmap_semanas.append(semana)
             semana = []
 
-    labels_grafico = []
-    datasets_grafico = []
-    if habitos:
-        for i in range(29, -1, -1):
-            d = hoy - timedelta(days=i)
-            labels_grafico.append(d.strftime("%b %d"))
-
-        for h in habitos[:5]:
-            data = []
-            for i in range(29, -1, -1):
-                d = hoy - timedelta(days=i)
-                data.append(
-                    1 if str(d) in heatmap_data[h.id]["registros"] else 0
-                )
-            datasets_grafico.append(
-                {
-                    "label": h.nombre,
-                    "data": data,
-                    "backgroundColor": h.color,
-                    "borderColor": h.color,
-                    "borderWidth": 1,
-                    "borderRadius": 4,
-                }
+    calendario_dias = []
+    dias_semana = ["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"]
+    for i in range(29, -1, -1):
+        d = hoy - timedelta(days=i)
+        dia_info = {
+            "fecha": d,
+            "fecha_str": str(d),
+            "num": d.day,
+            "dia_semana": dias_semana[d.weekday()],
+            "mes": d.strftime("%b"),
+            "habitos": {},
+        }
+        for h in habitos:
+            dia_info["habitos"][h.id] = (
+                str(d) in heatmap_data[h.id]["registros"]
             )
+        calendario_dias.append(dia_info)
+
+    today_str = str(hoy)
+    checked_hoy = {}
+    for h in habitos:
+        checked_hoy[h.id] = today_str in heatmap_data[h.id]["registros"]
 
     ctx = {
         "habitos": habitos,
         "stats": stats,
         "heatmap_data": heatmap_data,
         "heatmap_semanas": heatmap_semanas,
-        "labels_grafico": json.dumps(labels_grafico),
-        "datasets_grafico": json.dumps(datasets_grafico),
+        "calendario_dias": calendario_dias,
+        "dias_semana": dias_semana,
         "hoy": hoy,
+        "today_str": today_str,
+        "checked_hoy": checked_hoy,
+        "primer_habito_id": habitos.first().id if habitos else None,
     }
     return render(request, "habits/panel.html", ctx)
 
