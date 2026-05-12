@@ -1,8 +1,10 @@
 from django.shortcuts import render, redirect
 from django.contrib.auth import login
+from django_ratelimit.decorators import ratelimit
 from .forms import FormularioRegistro
 
 
+@ratelimit(key="ip", rate="3/h", method="POST", block=True)
 def registro(request):
     if request.user.is_authenticated:
         return redirect("panel")

@@ -1,15 +1,15 @@
 from pathlib import Path
-import os
+from decouple import config, Csv
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY", "django-insecure-a1b2c3d4e5f6g7h8i9j0k-change-in-production")
+SECRET_KEY = config("DJANGO_SECRET_KEY")
 
-DEBUG = os.environ.get("DJANGO_DEBUG", "True") == "True"
+DEBUG = config("DJANGO_DEBUG", default=False, cast=bool)
 
-ALLOWED_HOSTS = os.environ.get("DJANGO_ALLOWED_HOSTS", "127.0.0.1,localhost").split(",")
+ALLOWED_HOSTS = config("DJANGO_ALLOWED_HOSTS", default="127.0.0.1,localhost", cast=Csv())
 
-CSRF_TRUSTED_ORIGINS = os.environ.get("DJANGO_CSRF_TRUSTED_ORIGINS", "http://127.0.0.1:8000,http://localhost:8000").split(",")
+CSRF_TRUSTED_ORIGINS = config("DJANGO_CSRF_TRUSTED_ORIGINS", default="http://127.0.0.1:8000,http://localhost:8000", cast=Csv())
 
 INSTALLED_APPS = [
     "django.contrib.admin",
@@ -61,13 +61,16 @@ DATABASES = {
     }
 }
 
-db_url = os.environ.get("DATABASE_URL")
+db_url = config("DATABASE_URL", default=None)
 if db_url:
     import dj_database_url
     DATABASES["default"] = dj_database_url.parse(db_url, conn_max_age=600)
 
 AUTH_PASSWORD_VALIDATORS = [
-    {"NAME": "django.contrib.auth.password_validation.MinimumLengthValidator"},
+    {"NAME": "django.contrib.auth.password_validation.MinimumLengthValidator", "OPTIONS": {"min_length": 8}},
+    {"NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"},
+    {"NAME": "django.contrib.auth.password_validation.CommonPasswordValidator"},
+    {"NAME": "django.contrib.auth.password_validation.NumericPasswordValidator"},
 ]
 
 LANGUAGE_CODE = "en-us"
@@ -82,5 +85,17 @@ STATIC_ROOT = BASE_DIR / "staticfiles"
 LOGIN_URL = "/iniciar-sesion/"
 LOGIN_REDIRECT_URL = "/panel/"
 LOGOUT_REDIRECT_URL = "/"
+
+if not DEBUG:
+    SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+    SECURE_HSTS_SECONDS = 31536000
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+    SECURE_CONTENT_TYPE_NOSNIFF = True
+    SECURE_BROWSER_XSS_FILTER = True
+    SECURE_REFERRER_POLICY = "same-origin"
+
+SECURE_SSL_REDIRECT = config("DJANGO_SECURE_SSL", default=False, cast=bool)
+SESSION_COOKIE_SECURE = config("DJANGO_SESSION_SECURE", default=not DEBUG, cast=bool)
+CSRF_COOKIE_SECURE = config("DJANGO_SESSION_SECURE", default=not DEBUG, cast=bool)
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"

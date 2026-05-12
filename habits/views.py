@@ -1,14 +1,13 @@
 import calendar
-import os
 from datetime import date, timedelta
 
 from django.contrib.auth import login
 from django.contrib.auth.decorators import login_required
-from django.contrib.auth.models import User
 from django.shortcuts import render, redirect, get_object_or_404
-from django.http import JsonResponse, HttpResponse
+from django.http import JsonResponse
 from django.utils import timezone
 from django.db.models import Count
+from django_ratelimit.decorators import ratelimit
 
 from .models import Habito, RegistroHabito
 from .forms import FormularioHabito
@@ -63,8 +62,13 @@ def panel(request):
         if hoy in registros:
             stats["hechos_hoy"] += 1
 
-    selected_year = int(request.GET.get("ano", hoy.year))
-    selected_month = int(request.GET.get("mes", hoy.month))
+    try:
+        selected_year = int(request.GET.get("ano", hoy.year))
+        selected_month = int(request.GET.get("mes", hoy.month))
+    except (ValueError, TypeError):
+        selected_year, selected_month = hoy.year, hoy.month
+    selected_year = max(2000, min(selected_year, 2100))
+    selected_month = max(1, min(selected_month, 12))
     _, num_days = calendar.monthrange(selected_year, selected_month)
 
     calendario_dias = []
@@ -193,6 +197,7 @@ def eliminar_habito(request, pk):
     )
 
 
+@ratelimit(key="user", rate="30/m", method="POST", block=True)
 @login_required
 def alternar_registro(request):
     if request.method != "POST":
@@ -213,6 +218,7 @@ def alternar_registro(request):
     return JsonResponse({"status": "checked"})
 
 
+@ratelimit(key="user", rate="60/m", method="GET", block=True)
 @login_required
 def datos_estadisticas(request):
     habito_id = request.GET.get("habito_id")
@@ -240,12 +246,4 @@ def datos_estadisticas(request):
     )
 
 
-def setup_admin(request):
-    token = request.GET.get("token", "")
-    expected = os.environ.get("SETUP_TOKEN", "")
-    if not expected or token != expected:
-        return HttpResponse("Token inválido", status=403)
-    if User.objects.filter(is_superuser=True).exists():
-        return HttpResponse("El admin ya existe")
-    User.objects.create_superuser("admin", "ivanvenegasvallejo@gmail.com", "admin123")
-    return HttpResponse("Admin creado: usuario=admin, clave=admin123")
+
